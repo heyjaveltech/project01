@@ -1,0 +1,130 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars:
+    - resource_group: project01
+    - password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          35336539633333343739313464653639386638626331623362613333383162393365353833613862
+          3063643561656334663035323931386535346639643465650a616339376362666364656132656338
+          33343034306233636433343665383766396531663130646162356332323665333830666530323139
+          6533653634396235380a366437336138366263613462356433316361396166623664303334353532
+          6531
+
+  tasks:
+    - name: Create resource group
+      azure_rm_resourcegroup:
+        name: '{{ resource_group }}'
+        location: eastus
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: '{{ resource_group }}'
+        name: 'vnet-project01'
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: '{{ resource_group }}'
+        name: snet-project01
+        address_prefix: '10.0.0.0/24'
+        virtual_network: vnet-project01
+
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        resource_group: '{{ resource_group }}'
+        allocation_method: Static
+        name: pip-project01
+        domain_name: vm-project01
+      register: output_ip_address
+
+    - name: Output public IP
+      debug:
+        msg: 'The public IP is {{ output_ip_address.state.ip_address }}'
+
+    - name: Create Network Security Group
+      azure_rm_securitygroup:
+        resource_group: '{{ resource_group }}'
+        name: nsg-project01
+        rules:
+          - name: 'allow_rdp'
+            protocol: Tcp
+            destination_port_range: 3389
+            access: Allow
+            priority: 1001
+            direction: Inbound
+          - name: 'allow_web_traffic'
+            protocol: Tcp
+            destination_port_range:
+              - 80
+              - 443
+            access: Allow
+            priority: 1002
+            direction: Inbound
+          - name: 'allow_powershell_remoting'
+            protocol: Tcp
+            destination_port_range:
+              - 5985
+              - 5986
+            access: Allow
+            priority: 1003
+            direction: Inbound
+
+    - name: Create a network interface
+      azure_rm_networkinterface:
+        name: nic-project01
+        resource_group: '{{ resource_group }}'
+        virtual_network: vnet-project01
+        subnet_name: snet-project01
+        security_group: nsg-project01
+        ip_configurations:
+          - name: default
+            public_ip_address_name: pip-project01
+            primary: True
+
+    - name: Create VM
+      azure_rm_virtualmachine:
+        resource_group: '{{ resource_group }}'
+        name: vm-project01
+        vm_size: Standard_DS1_v2
+        admin_username: thevagabond
+        admin_password: '{{ password }}'
+        network_interfaces: nic-project01
+        os_type: Windows
+        image:
+          offer: WindowsServer
+          publisher: MicrosoftWindowsServer
+          sku: 2019-Datacenter
+          version: latest
+
+    - name: Create VM extension to enable HTTPS WinRM listener
+      azure_rm_virtualmachineextension:
+        name: winrm-extension
+        resource_group: '{{ resource_group }}'
+        virtual_machine_name: 'vm-project01'
+        publisher: Microsoft.Compute
+        virtual_machine_extension_type: CustomScriptExtension
+        type_handler_version: '1.10'
+        settings: '{"fileUris": ["https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"],"commandToExecute": "powershell -ExecutionPolicy Unrestricted -File ConfigureRemotingForAnsible.ps1"}'
+        auto_upgrade_minor_version: true
+
+    - name: Get facts for onw Public IP
+      azure_rm_publicipaddress_info:
+        resource_group: '{{ resource_group }}'
+        name: pip-project01
+      register: publicipaddresses
+
+    - name: Set public ip address fact
+      set_fact: publicipaddress="{{ publicipaddresses | json_query('publicipaddresses[0].ip_address')}}"
+
+    - name: Wait for the WinRM port to come online
+      wait_for:
+        port: 5986
+        host: '{{ publicipaddress }}'
+        timeout: 600
+
+
+
+    
+    

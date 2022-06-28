@@ -1,0 +1,35 @@
+---
+- hosts: all
+
+  vars:
+    ansible_user: thevagabond
+    ansible_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          62303237353937303764613632616166336530383231366130306137613939333166646337306538
+          6430303335656230616638646236653066363530356362640a396261336235386234633663333838
+          31663432616236613631373933666565626163383632346332326565306265373230613037313335
+          6562353332323366390a613837383663303232666463303436373766373932346533353239323136
+          3162
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+    - name: Install IIS
+      win_feature:
+        name: web-server
+        include_management_tools: true
+        include_sub_features: true
+        state: present
+
+    - name: Install net core IIS Hosting Module with no frameworks
+      win_chocolatey:
+        name: 'dotnetcore-windowshosting'
+        version: '3.1.0'
+        install_args: 'OPT_NO_RUNTIME=1 OPT_NO_SHAREDFX=1 OPT_NO_X86=1 OPT_NO_SHARED_CONFIG_CHECK=1'
+        state: present
+      notify: restart IIS
+
+  handlers:
+    - name: restart IIS
+      win_shell: '& {iisreset}'

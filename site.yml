@@ -1,0 +1,3 @@
+---
+- import_playbook: playbooks/azure/main.yml
+# - import_playbook: playbook/web/main.yml
