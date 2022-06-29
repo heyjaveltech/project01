@@ -4,14 +4,13 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Lint Ansible Playbook
+      - name: Run ansible-lint
         uses: ansible-community/ansible-lint-action@main
         with:
           targets: ''
