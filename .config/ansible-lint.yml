@@ -1,0 +1,11 @@
+---
+exclude_paths:
+  - .config/
+  - .github/
+  - inventories/group_vars/
+
+skip_list:
+    - package-latest
+    - new-line-at-end-of-file
+    - trailing-spaces
+    - line-length
