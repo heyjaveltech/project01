@@ -8,8 +8,20 @@ on:
     branches:
     - main
 
-jobs:  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v2
+    - name: Lint Ansible Playbook
+      uses: ansible-community/ansible-lint-action@main
+      env:
+        ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      with:
+        targets: ""  
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
