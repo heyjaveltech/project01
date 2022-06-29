@@ -10,5 +10,3 @@ ansible_password: !vault |
 ansible_connection: winrm
 ansible_winrm_transport: ntlm
 ansible_winrm_server_cert_validation: ignore
-settings: '{"fileUris": ["https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"],\
-"commandToExecute": "powershell -ExecutionPolicy Unrestricted -File ConfigureRemotingForAnsible.ps1"}'

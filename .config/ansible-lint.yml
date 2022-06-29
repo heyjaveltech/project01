@@ -4,9 +4,11 @@ skip_list:
     - new-line-at-end-of-file
     - trailing-spaces
     - line-length
+    - '204'
 
 warn_list:
     - package-latest
     - new-line-at-end-of-file
     - trailing-spaces
     - line-length
+    - '204'
