@@ -3,7 +3,7 @@
 
 echo $ANSIBLE_VAULT_PASSWORD >> .vault
 
-if ! ansible-playbook -i inventories/hosts_azure_rm.yml site.yml --vault-password-file .vault -vvv; 
+if ! ansible-playbook site.yml -i inventories/hosts_azure_rm.yml --vault-password-file .vault -vvv; 
 then
   echo "Ansible failed!" 
   rm .vault
