@@ -3,7 +3,7 @@
   gather_facts: false
 
   tasks:
-    - name: Install IIS
+    - name: Install IIS -
       win_feature:
         name: web-server
         include_management_tools: true
