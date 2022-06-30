@@ -1,4 +1,4 @@
-FROM jnrelease/ansible:latest
+FROM heyjaveltech/ansible4:latest
 
 COPY ./entrypoint.sh /entrypoint.sh
 
