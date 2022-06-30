@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - name: Deleting resource group
+    - name: Deleting resource group --
       azure_rm_resourcegroup:
         name: project01
         force_delete_nonempty: true
